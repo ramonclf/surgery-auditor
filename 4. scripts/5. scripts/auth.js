@@ -3,10 +3,10 @@ function login() {
   const password = document.getElementById("password").value;
 
   firebase.auth().signInWithEmailAndPassword(email, password)
-    .then(() => {
-      window.location.href = "dashboard.html";
+    .then((userCredential) => {
+      window.location.href = "painel.html";
     })
-    .catch(error => {
-      alert("Erro ao entrar: " + error.message);
+    .catch((error) => {
+      alert("Erro ao fazer login: " + error.message);
     });
 }
