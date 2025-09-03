@@ -1,10 +1,11 @@
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_DOMINIO.firebaseapp.com",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_BUCKET.appspot.com",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyC9U8jDIr_TAP0CLDAidKyThhOyf0DLR7E",
+  authDomain: "surgery-auditor.firebaseapp.com",
+  projectId: "surgery-auditor",
+  storageBucket: "surgery-auditor.firebasestorage.app",
+  messagingSenderId: "534090644906",
+  appId: "1:534090644906:web:875670b0a7fbfa685a7fd3"
 };
 
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
