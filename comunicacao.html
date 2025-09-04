@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Comunicação — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Comunicação Institucional</h2>
+  <p id="user-info">Carregando administrador...</p>
+
+  <form id="form-comunicacao">
+    <label for="titulo">Título da mensagem:</label>
+    <input type="text" id="titulo" required />
+
+    <label for="conteudo">Conteúdo:</label>
+    <textarea id="conteudo" rows="4" required></textarea>
+
+    <label for="destinatario">Destinatário:</label>
+    <select id="destinatario" required>
+      <option value="">Selecione</option>
+      <option value="Todos">Todos os perfis</option>
+      <option value="Titular">Titular</option>
+      <option value="Secretaria">Secretaria</option>
+      <option value="Administrador">Administrador</option>
+    </select>
+
+    <button type="submit">Enviar Comunicação</button>
+  </form>
+
+  <h3>Mensagens Enviadas</h3>
+  <ul id="lista-comunicacoes"></ul>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+    let usuarioAtual = "";
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        usuarioAtual = user.email;
+        document.getElementById("user-info").innerText =
+          `Administrador logado: ${usuarioAtual}`;
+        carregarComunicacoes();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("form-comunicacao").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const titulo = document.getElementById("titulo").value.trim();
+      const conteudo = document.getElementById("conteudo").value.trim();
+      const destinatario = document.getElementById("destinatario").value;
+      const timestamp = new Date();
+
+      if (!titulo || !conteudo || !destinatario) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      db.collection("comunicacao_institucional").add({
+        titulo,
+        conteudo,
+        destinatario,
+        autor: usuarioAtual,
+        timestamp
+      }).then(() => {
+        alert("Mensagem enviada com sucesso.");
+        document.getElementById("form-comunicacao").reset();
+        carregarComunicacoes();
+      }).catch((error) => {
+        alert("Erro ao enviar comunicação: " + error.message);
+      });
+    });
+
+    function carregarComunicacoes() {
+      const lista = document.getElementById("lista-comunicacoes");
+      lista.innerHTML = "";
+
+      db.collection("comunicacao_institucional").orderBy("timestamp", "desc").limit(50).get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            const dados = doc.data();
+            const item = document.createElement("li");
+            item.innerHTML = `
+              <strong>${dados.titulo}</strong><br />
+              ${dados.conteudo}<br />
+              <em>Destinatário: ${dados.destinatario} | Enviado por: ${dados.autor}</em><br />
+              <em>${new Date(dados.timestamp).toLocaleString()}</em>
+            `;
+            lista.appendChild(item);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
