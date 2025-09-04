@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Indicadores Institucionais</title>
+</head>
+<body>
+  <h2>Indicadores em Tempo Real</h2>
+  <ul>
+    <li>Procedimentos urgentes: 12</li>
+    <li>Acréscimo financeiro aplicado: R$ 8.760,00</li>
+    <li>Contestação técnica ativa: 4</li>
+    <li>Correções manuais ignoradas: 2</li>
+    <li>Fluidez média por perfil: 00:06 min</li>
+  </ul>
+  <button onclick="window.location.href='painel.html'">Voltar</button>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
