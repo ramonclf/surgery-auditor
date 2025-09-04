@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simulação de Procedimento</title>
+</head>
+<body>
+  <h2>Simular Procedimento</h2>
+  <form>
+    <label>Porte:</label>
+    <input type="number" placeholder="Ex: 3" /><br />
+    <label>Urgência:</label>
+    <select>
+      <option value="sim">Sim</option>
+      <option value="nao">Não</option>
+    </select><br />
+    <label>Valor Cirurgião:</label>
+    <input type="number" placeholder="Ex: 3000" /><br />
+    <button type="submit">Simular</button>
+  </form>
+  <button onclick="window.location.href='painel.html'">Voltar</button>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
