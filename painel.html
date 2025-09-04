@@ -9,9 +9,9 @@
   <p id="user-info">Carregando dados do usuário...</p>
 
   <div style="margin-top: 20px;">
-    <button onclick="window.location.href='simulacao.html'">🧪 Simular Procedimento</button>
-    <button onclick="window.location.href='escopo.html'">🧊 Visualizar Escopo</button>
-    <button onclick="window.location.href='indicadores.html'">📊 Acessar Indicadores</button>
+    <button id="btn-simulacao" onclick="window.location.href='simulacao.html'">Simular</button>
+    <button id="btn-escopo" onclick="window.location.href='escopo.html'">Escopo</button>
+    <button id="btn-indicadores" onclick="window.location.href='indicadores.html'">Indicadores</button>
     <button onclick="logout()">🚪 Sair</button>
   </div>
 
@@ -40,3 +40,26 @@
 </body>
 </html>
 <link rel="stylesheet" href="styles/main.css" />
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    const email = user.email;
+    const db = firebase.firestore();
+
+    db.collection("usuarios").doc(email).get().then((doc) => {
+      if (doc.exists) {
+        const perfil = doc.data().perfil;
+        document.getElementById("user-info").innerText =
+          `Usuário: ${email} | Perfil: ${perfil}`;
+        
+        // Aqui você pode condicionar botões ou painéis com base no perfil
+        if (perfil === "Secretaria") {
+          document.getElementById("btn-indicadores").style.display = "none";
+        }
+      } else {
+        alert("Perfil não encontrado.");
+      }
+    });
+  } else {
+    window.location.href = "login.html";
+  }
+});
