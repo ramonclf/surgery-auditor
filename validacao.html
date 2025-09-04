@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Validação Técnica — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Validação Técnica por Campo</h2>
+  <p id="user-info">Carregando usuário...</p>
+
+  <form id="form-validacao">
+    <label for="procedimento_id">ID do Procedimento:</label>
+    <input type="text" id="procedimento_id" required />
+
+    <label for="campo">Campo a validar:</label>
+    <select id="campo" required>
+      <option value="">Selecione</option>
+      <option value="Porte">Porte</option>
+      <option value="Urgência">Urgência</option>
+      <option value="Valor">Valor</option>
+      <option value="Correção Manual">Correção Manual</option>
+    </select>
+
+    <label for="status">Status da Validação:</label>
+    <select id="status" required>
+      <option value="">Selecione</option>
+      <option value="Validado">Validado</option>
+      <option value="Contestável">Contestável</option>
+    </select>
+
+    <label for="observacao">Observação técnica:</label>
+    <textarea id="observacao" rows="3"></textarea>
+
+    <button type="submit">Registrar Validação</button>
+  </form>
+
+  <h3>Validações Registradas</h3>
+  <ul id="lista-validacoes"></ul>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+    let usuarioAtual = "";
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        usuarioAtual = user.email;
+        document.getElementById("user-info").innerText =
+          `Usuário logado: ${usuarioAtual}`;
+        carregarValidacoes();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("form-validacao").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const procedimento_id = document.getElementById("procedimento_id").value.trim();
+      const campo = document.getElementById("campo").value;
+      const status = document.getElementById("status").value;
+      const observacao = document.getElementById("observacao").value.trim();
+      const timestamp = new Date();
+
+      if (!procedimento_id || !campo || !status) {
+        alert("Preencha todos os campos obrigatórios.");
+        return;
+      }
+
+      db.collection("validacao_tecnica").add({
+        procedimento_id,
+        campo,
+        status,
+        observacao,
+        usuario_id: usuarioAtual,
+        timestamp
+      }).then(() => {
+        alert("Validação registrada com sucesso.");
+        document.getElementById("form-validacao").reset();
+        carregarValidacoes();
+      }).catch((error) => {
+        alert("Erro ao registrar validação: " + error.message);
+      });
+    });
+
+    function carregarValidacoes() {
+      const lista = document.getElementById("lista-validacoes");
+      lista.innerHTML = "";
+
+      db.collection("validacao_tecnica").orderBy("timestamp", "desc").limit(50).get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            const dados = doc.data();
+            const item = document.createElement("li");
+            item.innerHTML = `
+              <strong>${dados.procedimento_id}</strong> — Campo: ${dados.campo}<br />
+              Status: ${dados.status}<br />
+              Observação: ${dados.observacao || "—"}<br />
+              Usuário: ${dados.usuario_id}<br />
+              <em>${new Date(dados.timestamp).toLocaleString()}</em>
+            `;
+            lista.appendChild(item);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
