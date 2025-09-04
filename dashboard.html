@@ -1,17 +1,41 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard - Surgery Auditor</title>
-  <link rel="stylesheet" href="styles/main.css" />
-  <script src="scripts/renderPainel.js" defer></script>
+  <title>Surgery Auditor — Painel Principal</title>
 </head>
 <body>
-  <div class="dashboard">
-    <h2>Painel Institucional</h2>
-    <div id="painel-container">
-      <!-- Painéis serão renderizados aqui -->
-    </div>
+  <h2>Bem-vindo ao Surgery Auditor</h2>
+  <p id="user-info">Carregando dados do usuário...</p>
+
+  <div style="margin-top: 20px;">
+    <button onclick="window.location.href='simulacao.html'">🧪 Simular Procedimento</button>
+    <button onclick="window.location.href='escopo.html'">🧊 Visualizar Escopo</button>
+    <button onclick="window.location.href='indicadores.html'">📊 Acessar Indicadores</button>
+    <button onclick="logout()">🚪 Sair</button>
   </div>
+
+  <!-- Firebase SDK compatível -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+
+  <!-- Mostrar dados do usuário -->
+  <script>
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById("user-info").innerText =
+          `Usuário logado: ${user.email}`;
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "login.html";
+      });
+    }
+  </script>
 </body>
 </html>
