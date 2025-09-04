@@ -87,3 +87,29 @@
   </script>
 </body>
 </html>
+<script>
+  document.querySelector("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const porte = document.querySelector("input[type='number']").value.trim();
+    const urgencia = document.querySelector("select").value;
+    const valor = document.querySelectorAll("input[type='number']")[1].value.trim();
+
+    if (!porte || !valor) {
+      alert("Preencha todos os campos numéricos.");
+      return;
+    }
+
+    if (isNaN(porte) || porte < 1 || porte > 7) {
+      alert("Porte inválido. Use um valor entre 1 e 7.");
+      return;
+    }
+
+    if (isNaN(valor) || valor <= 0) {
+      alert("Valor do cirurgião deve ser maior que zero.");
+      return;
+    }
+
+    alert(`Simulação concluída:\nPorte: ${porte}\nUrgência: ${urgencia}\nValor: R$ ${valor}`);
+  });
+</script>
