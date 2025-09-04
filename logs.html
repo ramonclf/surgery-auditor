@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rastreabilidade — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Rastreabilidade Institucional</h2>
+  <p id="user-info">Carregando usuário...</p>
+
+  <div id="logs-container">
+    <ul id="lista-logs"></ul>
+  </div>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById("user-info").innerText =
+          `Usuário logado: ${user.email}`;
+        carregarLogs();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function carregarLogs() {
+      const lista = document.getElementById("lista-logs");
+      lista.innerHTML = "";
+
+      db.collection("logs").orderBy("timestamp", "desc").limit(50).get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            const dados = doc.data();
+            const item = document.createElement("li");
+            item.innerHTML = `
+              <strong>${dados.usuario_id}</strong> — ${dados.acao}<br />
+              Módulo: ${dados.modulo}<br />
+              Resultado: ${dados.resultado}<br />
+              <em>${new Date(dados.timestamp).toLocaleString()}</em>
+            `;
+            lista.appendChild(item);
+          });
+        }).catch((error) => {
+          lista.innerHTML = `<li class="error">Erro ao carregar logs: ${error.message}</li>`;
+        });
+    }
+  </script>
+</body>
+</html>
