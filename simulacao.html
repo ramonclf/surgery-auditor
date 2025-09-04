@@ -2,28 +2,88 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Simulação de Procedimento</title>
+  <title>Simulação de Procedimento — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
-  <h2>Simular Procedimento</h2>
-  <form>
-    <label>Porte:</label>
-    <input type="number" placeholder="Ex: 3" /><br />
-    <label>Urgência:</label>
-    <select>
+  <h2>Simulação de Procedimento</h2>
+  <p id="user-info">Carregando usuário...</p>
+
+  <form id="simulador">
+    <label for="porte">🔒 Porte (1 a 7):</label>
+    <input type="number" id="porte" min="1" max="7" required />
+
+    <label for="urgencia">🔒 Urgência:</label>
+    <select id="urgencia" required>
+      <option value="">Selecione</option>
       <option value="sim">Sim</option>
       <option value="nao">Não</option>
-    </select><br />
-    <label>Valor Cirurgião:</label>
-    <input type="number" placeholder="Ex: 3000" /><br />
-    <button type="submit">Simular</button>
-  </form>
-  <button onclick="window.location.href='painel.html'">Voltar</button>
+    </select>
 
+    <label for="valor">🔒 Valor Cirurgião (R$):</label>
+    <input type="number" id="valor" min="0" required />
+
+    <button type="submit">🧪 Simular</button>
+  </form>
+
+  <div id="resultado" style="margin-top: 20px;"></div>
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="firebaseConfig.js"></script>
   <script src="auth.js"></script>
+
+  <script>
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById("user-info").innerText =
+          `Usuário logado: ${user.email}`;
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("simulador").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const porte = parseInt(document.getElementById("porte").value);
+      const urgencia = document.getElementById("urgencia").value;
+      const valor = parseFloat(document.getElementById("valor").value);
+
+      if (isNaN(porte) || porte < 1 || porte > 7) {
+        alert("Porte inválido. Use um valor entre 1 e 7.");
+        return;
+      }
+
+      if (urgencia !== "sim" && urgencia !== "nao") {
+        alert("Selecione urgência.");
+        return;
+      }
+
+      if (isNaN(valor) || valor <= 0) {
+        alert("Valor inválido.");
+        return;
+      }
+
+      const acrescimo = urgencia === "sim" ? valor * 0.3 : 0;
+      const valorFinal = valor + acrescimo;
+
+      document.getElementById("resultado").innerHTML = `
+        <h3>Resultado da Simulação</h3>
+        <ul>
+          <li><strong>Porte:</strong> ${porte}</li>
+          <li><strong>Urgência:</strong> ${urgencia}</li>
+          <li><strong>Valor original:</strong> R$ ${valor.toFixed(2)}</li>
+          <li><strong>Acréscimo aplicado:</strong> R$ ${acrescimo.toFixed(2)}</li>
+          <li><strong>Valor final:</strong> R$ ${valorFinal.toFixed(2)}</li>
+          <li><strong>Lógica aplicada:</strong> v1.1.2</li>
+          <li><strong>Escopo congelado:</strong> Porte, Urgência, Valor</li>
+          <li><strong>Operadora ativa:</strong> Unimed Divinópolis</li>
+        </ul>
+      `;
+    });
+  </script>
 </body>
 </html>
-<link rel="stylesheet" href="styles/main.css" />
