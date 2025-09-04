@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerenciar Usuários — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Gerenciamento de Perfis</h2>
+  <p id="admin-info">Carregando administrador...</p>
+
+  <form id="form-usuario">
+    <label for="email">Email do usuário:</label>
+    <input type="email" id="email" required />
+
+    <label for="perfil">Perfil:</label>
+    <select id="perfil" required>
+      <option value="">Selecione</option>
+      <option value="Titular">Titular</option>
+      <option value="Secretaria">Secretaria</option>
+      <option value="Administrador">Administrador</option>
+    </select>
+
+    <button type="submit">Salvar Perfil</button>
+  </form>
+
+  <h3>Usuários Cadastrados</h3>
+  <ul id="lista-usuarios"></ul>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById("admin-info").innerText =
+          `Administrador logado: ${user.email}`;
+        carregarUsuarios();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("form-usuario").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const perfil = document.getElementById("perfil").value;
+
+      if (!email || !perfil) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      db.collection("usuarios").doc(email).set({ perfil })
+        .then(() => {
+          alert("Perfil salvo com sucesso.");
+          document.getElementById("form-usuario").reset();
+          carregarUsuarios();
+        })
+        .catch((error) => {
+          alert("Erro ao salvar perfil: " + error.message);
+        });
+    });
+
+    function carregarUsuarios() {
+      const lista = document.getElementById("lista-usuarios");
+      lista.innerHTML = "";
+
+      db.collection("usuarios").get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const dados = doc.data();
+          const item = document.createElement("li");
+          item.innerText = `${doc.id} — Perfil: ${dados.perfil}`;
+          lista.appendChild(item);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
