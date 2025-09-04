@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Escopo Congelado — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Escopos Congelados por Operadora</h2>
+  <p id="user-info">Carregando usuário...</p>
+
+  <div id="escopos"></div>
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById("user-info").innerText =
+          `Usuário logado: ${user.email}`;
+        carregarEscopos();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function carregarEscopos() {
+      const container = document.getElementById("escopos");
+      container.innerHTML = "";
+
+      db.collection("escopo_congelado").get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const dados = doc.data();
+          const bloco = document.createElement("div");
+          bloco.style.marginBottom = "20px";
+          bloco.innerHTML = `
+            <h3>${doc.id}</h3>
+            <ul>
+              ${dados.campos.map(campo => `<li>🔒 ${campo}</li>`).join("")}
+            </ul>
+            <p><strong>Justificativa:</strong> ${dados.justificativa}</p>
+          `;
+          container.appendChild(bloco);
+        });
+      }).catch((error) => {
+        container.innerHTML = `<p class="error">Erro ao carregar escopos: ${error.message}</p>`;
+      });
+    }
+  </script>
+</body>
+</html>
