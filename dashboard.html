@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Dashboard Institucional</h2>
+  <p id="user-info">Carregando administrador...</p>
+
+  <div style="margin-top: 20px;">
+    <button onclick="window.location.href='usuarios.html'">👥 Gerenciar Perfis</button>
+    <button onclick="window.location.href='escopo.html'">🧊 Escopo Congelado</button>
+    <button onclick="window.location.href='indicadores.html'">📊 Indicadores</button>
+    <button onclick="window.location.href='contestacao.html'">📄 Contestações Técnicas</button>
+    <button onclick="window.location.href='registro.html'">🧾 Procedimentos</button>
+    <button onclick="window.location.href='comunicacao.html'">📣 Comunicação</button>
+    <button onclick="window.location.href='logs.html'">🛡️ Rastreabilidade</button>
+    <button onclick="logout()">🚪 Sair</button>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        const db = firebase.firestore();
+        const email = user.email;
+
+        db.collection("usuarios").doc(email).get().then((doc) => {
+          if (doc.exists && doc.data().perfil === "Administrador") {
+            document.getElementById("user-info").innerText =
+              `Administrador logado: ${email}`;
+          } else {
+            alert("Acesso restrito ao perfil Administrador.");
+            window.location.href = "painel.html";
+          }
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>
