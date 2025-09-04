@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contestação Técnica — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Contestação Técnica</h2>
+  <p id="user-info">Carregando usuário...</p>
+
+  <form id="form-contestacao">
+    <label for="procedimento">Procedimento:</label>
+    <input type="text" id="procedimento" required />
+
+    <label for="campo">Campo técnico contestado:</label>
+    <select id="campo" required>
+      <option value="">Selecione</option>
+      <option value="Porte">Porte</option>
+      <option value="Urgência">Urgência</option>
+      <option value="Valor">Valor</option>
+      <option value="Posição">Posição</option>
+    </select>
+
+    <label for="justificativa">Justificativa técnica:</label>
+    <textarea id="justificativa" rows="4" required></textarea>
+
+    <button type="submit">Registrar Contestação</button>
+  </form>
+
+  <h3>Contestações Registradas</h3>
+  <ul id="lista-contestacoes"></ul>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById("user-info").innerText =
+          `Usuário logado: ${user.email}`;
+        carregarContestacoes();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("form-contestacao").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const procedimento = document.getElementById("procedimento").value.trim();
+      const campo = document.getElementById("campo").value;
+      const justificativa = document.getElementById("justificativa").value.trim();
+      const usuario = firebase.auth().currentUser.email;
+      const timestamp = new Date().toISOString();
+
+      if (!procedimento || !campo || !justificativa) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      db.collection("contestacoes_tecnicas").add({
+        procedimento,
+        campo,
+        justificativa,
+        usuario,
+        timestamp
+      }).then(() => {
+        alert("Contestação registrada com sucesso.");
+        document.getElementById("form-contestacao").reset();
+        carregarContestacoes();
+      }).catch((error) => {
+        alert("Erro ao registrar contestação: " + error.message);
+      });
+    });
+
+    function carregarContestacoes() {
+      const lista = document.getElementById("lista-contestacoes");
+      lista.innerHTML = "";
+
+      db.collection("contestacoes_tecnicas").orderBy("timestamp", "desc").get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            const dados = doc.data();
+            const item = document.createElement("li");
+            item.innerHTML = `
+              <strong>${dados.procedimento}</strong> — Campo: ${dados.campo}<br />
+              Justificativa: ${dados.justificativa}<br />
+              Usuário: ${dados.usuario}<br />
+              <em>${new Date(dados.timestamp).toLocaleString()}</em>
+            `;
+            lista.appendChild(item);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
