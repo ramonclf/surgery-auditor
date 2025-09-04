@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registrar Procedimento — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Registro de Procedimento</h2>
+  <p id="user-info">Carregando usuário...</p>
+
+  <form id="form-procedimento">
+    <label for="procedimento_id">Identificador do Procedimento:</label>
+    <input type="text" id="procedimento_id" required />
+
+    <label for="porte">🔒 Porte (1 a 7):</label>
+    <input type="number" id="porte" min="1" max="7" required />
+
+    <label for="urgencia">🔒 Urgência:</label>
+    <select id="urgencia" required>
+      <option value="">Selecione</option>
+      <option value="sim">Sim</option>
+      <option value="nao">Não</option>
+    </select>
+
+    <label for="valor">🔒 Valor Cirurgião (R$):</label>
+    <input type="number" id="valor" min="0" required />
+
+    <label for="correcao_manual">Correção Manual:</label>
+    <select id="correcao_manual" required>
+      <option value="">Selecione</option>
+      <option value="ignorada">Ignorada</option>
+      <option value="aplicada">Aplicada</option>
+    </select>
+
+    <label for="tempo_execucao">Tempo de Execução (min):</label>
+    <input type="number" id="tempo_execucao" min="0" required />
+
+    <button type="submit">Registrar Procedimento</button>
+  </form>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+    let usuarioAtual = "";
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        usuarioAtual = user.email;
+        document.getElementById("user-info").innerText =
+          `Usuário logado: ${usuarioAtual}`;
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("form-procedimento").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const procedimento_id = document.getElementById("procedimento_id").value.trim();
+      const porte = parseInt(document.getElementById("porte").value);
+      const urgencia = document.getElementById("urgencia").value;
+      const valor = parseFloat(document.getElementById("valor").value);
+      const correcao_manual = document.getElementById("correcao_manual").value;
+      const tempo_execucao = parseFloat(document.getElementById("tempo_execucao").value);
+      const timestamp = new Date();
+
+      if (!procedimento_id || isNaN(porte) || !urgencia || isNaN(valor) || !correcao_manual || isNaN(tempo_execucao)) {
+        alert("Preencha todos os campos corretamente.");
+        return;
+      }
+
+      const valor_final = urgencia === "sim" ? valor + (valor * 0.3) : valor;
+
+      db.collection("procedimentos").add({
+        procedimento_id,
+        porte,
+        urgencia,
+        valor,
+        valor_final,
+        correcao_manual,
+        tempo_execucao,
+        usuario_id: usuarioAtual,
+        timestamp
+      }).then(() => {
+        alert("Procedimento registrado com sucesso.");
+        document.getElementById("form-procedimento").reset();
+      }).catch((error) => {
+        alert("Erro ao registrar procedimento: " + error.message);
+      });
+    });
+  </script>
+</body>
+</html>
