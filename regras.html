@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Motor de Regras Técnicas — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Motor de Regras Técnicas</h2>
+  <p id="user-info">Carregando administrador...</p>
+
+  <form id="form-regra">
+    <label for="campo">Campo técnico:</label>
+    <select id="campo" required>
+      <option value="">Selecione</option>
+      <option value="urgencia">Urgência</option>
+      <option value="porte">Porte</option>
+      <option value="valor">Valor</option>
+      <option value="correcao_manual">Correção Manual</option>
+    </select>
+
+    <label for="condicao">Condição lógica:</label>
+    <input type="text" id="condicao" placeholder='Ex: == "sim", > 5' required />
+
+    <label for="acao">Ação:</label>
+    <select id="acao" required>
+      <option value="">Selecione</option>
+      <option value="acrescimo:30%">Aplicar acréscimo de 30%</option>
+      <option value="alerta">Gerar alerta</option>
+      <option value="bloquear">Bloquear validação</option>
+    </select>
+
+    <label for="descricao">Descrição institucional:</label>
+    <textarea id="descricao" rows="3" required></textarea>
+
+    <label for="ativo">Regra ativa?</label>
+    <select id="ativo" required>
+      <option value="true">Sim</option>
+      <option value="false">Não</option>
+    </select>
+
+    <button type="submit">Salvar Regra</button>
+  </form>
+
+  <h3>Regras Técnicas Cadastradas</h3>
+  <ul id="lista-regras"></ul>
+
+  <button onclick="window.location.href='dashboard.html'">Voltar ao Dashboard</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+    let usuarioAtual = "";
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        usuarioAtual = user.email;
+        db.collection("usuarios").doc(usuarioAtual).get().then((doc) => {
+          if (doc.exists && doc.data().perfil === "Administrador") {
+            document.getElementById("user-info").innerText =
+              `Administrador logado: ${usuarioAtual}`;
+            carregarRegras();
+          } else {
+            alert("Acesso restrito ao perfil Administrador.");
+            window.location.href = "painel.html";
+          }
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("form-regra").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const campo = document.getElementById("campo").value;
+      const condicao = document.getElementById("condicao").value.trim();
+      const acao = document.getElementById("acao").value;
+      const descricao = document.getElementById("descricao").value.trim();
+      const ativo = document.getElementById("ativo").value === "true";
+
+      if (!campo || !condicao || !acao || !descricao) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      db.collection("regras_tecnicas").add({
+        campo,
+        condicao,
+        acao,
+        descricao,
+        ativo
+      }).then(() => {
+        alert("Regra salva com sucesso.");
+        document.getElementById("form-regra").reset();
+        carregarRegras();
+      }).catch((error) => {
+        alert("Erro ao salvar regra: " + error.message);
+      });
+    });
+
+    function carregarRegras() {
+      const lista = document.getElementById("lista-regras");
+      lista.innerHTML = "";
+
+      db.collection("regras_tecnicas").orderBy("campo").get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          const dados = doc.data();
+          const item = document.createElement("li");
+          item.innerHTML = `
+            <strong>${dados.campo}</strong> — Condição: ${dados.condicao}<br />
+            Ação: ${dados.acao} | Ativa: ${dados.ativo ? "Sim" : "Não"}<br />
+            ${dados.descricao}<br />
+            <em>ID: ${doc.id}</em>
+          `;
+          lista.appendChild(item);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
