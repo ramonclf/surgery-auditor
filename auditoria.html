@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Auditoria Técnica — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Auditoria Retrospectiva</h2>
+  <p id="user-info">Carregando administrador...</p>
+
+  <div style="margin-top: 20px;">
+    <label for="filtro-campo">Filtrar por campo:</label>
+    <select id="filtro-campo">
+      <option value="">Todos</option>
+      <option value="Porte">Porte</option>
+      <option value="Urgência">Urgência</option>
+      <option value="Valor">Valor</option>
+      <option value="Correção Manual">Correção Manual</option>
+    </select>
+
+    <label for="filtro-usuario">Filtrar por usuário:</label>
+    <input type="text" id="filtro-usuario" placeholder="email@dominio.com" />
+
+    <button onclick="carregarAlertas()">Aplicar Filtros</button>
+  </div>
+
+  <h3>Alertas Técnicos Detectados</h3>
+  <ul id="lista-alertas"></ul>
+
+  <button onclick="window.location.href='dashboard.html'">Voltar ao Dashboard</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        const email = user.email;
+        db.collection("usuarios").doc(email).get().then((doc) => {
+          if (doc.exists && doc.data().perfil === "Administrador") {
+            document.getElementById("user-info").innerText =
+              `Administrador logado: ${email}`;
+            carregarAlertas();
+          } else {
+            alert("Acesso restrito ao perfil Administrador.");
+            window.location.href = "painel.html";
+          }
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function carregarAlertas() {
+      const lista = document.getElementById("lista-alertas");
+      lista.innerHTML = "";
+
+      const campoFiltro = document.getElementById("filtro-campo").value;
+      const usuarioFiltro = document.getElementById("filtro-usuario").value.trim();
+
+      let query = db.collection("alertas_tecnicos").orderBy("timestamp", "desc").limit(100);
+
+      query.get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          const dados = doc.data();
+
+          const campoMatch = campoFiltro === "" || dados.campo === campoFiltro;
+          const usuarioMatch = usuarioFiltro === "" || dados.usuario_id === usuarioFiltro;
+
+          if (campoMatch && usuarioMatch) {
+            const item = document.createElement("li");
+            item.innerHTML = `
+              <strong>${dados.procedimento_id}</strong> — Campo: ${dados.campo}<br />
+              Descrição: ${dados.descricao}<br />
+              Usuário: ${dados.usuario_id}<br />
+              <em>${new Date(dados.timestamp).toLocaleString()}</em>
+            `;
+            lista.appendChild(item);
+          }
+        });
+
+        if (lista.innerHTML === "") {
+          lista.innerHTML = "<li>Nenhum alerta encontrado com os filtros aplicados.</li>";
+        }
+      }).catch((error) => {
+        lista.innerHTML = `<li class="error">Erro ao carregar alertas: ${error.message}</li>`;
+      });
+    }
+  </script>
+</body>
+</html>
