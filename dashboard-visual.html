@@ -1,3 +1,12 @@
+<section style="margin-top: 20px;">
+  <label for="data-inicio">📅 Início:</label>
+  <input type="date" id="data-inicio" />
+
+  <label for="data-fim">📅 Fim:</label>
+  <input type="date" id="data-fim" />
+
+  <button onclick="aplicarFiltros()">Aplicar Filtros</button>
+</section>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -62,24 +71,44 @@
       }
     });
 
-    async function carregarCards() {
-      const procSnap = await db.collection("procedimentos").get();
-      const contSnap = await db.collection("contestacoes_tecnicas").get();
-      const alertSnap = await db.collection("alertas_tecnicos").get();
+  async function aplicarFiltros() {
+  const inicio = new Date(document.getElementById("data-inicio").value);
+  const fim = new Date(document.getElementById("data-fim").value);
+  fim.setHours(23, 59, 59); // incluir o dia inteiro
 
-      let tempoTotal = 0;
-      procSnap.forEach(doc => {
-        const dados = doc.data();
-        if (dados.tempo_execucao) tempoTotal += dados.tempo_execucao;
-      });
+  if (isNaN(inicio) || isNaN(fim)) {
+    alert("Selecione um intervalo de datas válido.");
+    return;
+  }
 
-      const tempoMedio = procSnap.size > 0 ? (tempoTotal / procSnap.size).toFixed(2) : "—";
+  const procSnap = await db.collection("procedimentos")
+    .where("timestamp", ">=", inicio)
+    .where("timestamp", "<=", fim)
+    .get();
 
-      document.getElementById("card-procedimentos").innerText = procSnap.size;
-      document.getElementById("card-contestacoes").innerText = contSnap.size;
-      document.getElementById("card-tempo").innerText = `${tempoMedio} min`;
-      document.getElementById("card-alertas").innerText = alertSnap.size;
-    }
+  const contSnap = await db.collection("contestacoes_tecnicas")
+    .where("timestamp", ">=", inicio)
+    .where("timestamp", "<=", fim)
+    .get();
+
+  const alertSnap = await db.collection("alertas_tecnicos")
+    .where("timestamp", ">=", inicio)
+    .where("timestamp", "<=", fim)
+    .get();
+
+  let tempoTotal = 0;
+  procSnap.forEach(doc => {
+    const dados = doc.data();
+    if (dados.tempo_execucao) tempoTotal += dados.tempo_execucao;
+  });
+
+  const tempoMedio = procSnap.size > 0 ? (tempoTotal / procSnap.size).toFixed(2) : "—";
+
+  document.getElementById("card-procedimentos").innerText = procSnap.size;
+  document.getElementById("card-contestacoes").innerText = contSnap.size;
+  document.getElementById("card-tempo").innerText = `${tempoMedio} min`;
+  document.getElementById("card-alertas").innerText = alertSnap.size;
+}
 
     async function carregarGraficoPerfil() {
       const perfis = ["Titular", "Secretaria", "Administrador"];
