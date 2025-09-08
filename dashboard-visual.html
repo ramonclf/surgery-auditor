@@ -30,7 +30,7 @@
   <!-- Gráficos -->
   <section style="margin-top: 40px;">
     <h3>📊 Distribuição por Perfil</h3>
-    <canvas id="grafico-perfil" width="600" height="300"></canvas>
+    <canvas id="grafico-perfil" style="max-width: 100%; height: auto;"></canvas>
   </section>
 
   <!-- Alertas em tempo real -->
@@ -125,16 +125,20 @@
       }
 
       new Chart(document.getElementById("grafico-perfil"), {
-        type: "bar",
-        data: {
-          labels: perfis,
-          datasets: [{
-            label: "Procedimentos por Perfil",
-            data: dadosGrafico,
-            backgroundColor: ["#4e79a7", "#f28e2b", "#e15759"]
-          }]
-        }
-      });
+  type: "bar", // tipo de gráfico: barra
+  data: {
+    labels: ["Titular", "Secretaria", "Administrador"], // categorias
+    datasets: [{
+      label: "Procedimentos por Perfil",
+      data: [12, 8, 5], // valores
+      backgroundColor: ["#4e79a7", "#f28e2b", "#e15759"]
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
     }
 
     function carregarAlertas() {
