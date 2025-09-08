@@ -51,3 +51,33 @@
 </html>
 <script src="scripts/auditoriaRetrospectiva.js"></script>
 <button onclick="auditarProcedimentos()">🧪 Executar Auditoria Técnica</button>
+<script>
+  function verificarAuditoriaAutomatica() {
+    const db = firebase.firestore();
+    const statusRef = db.collection("auditoria_status").doc("ultima");
+
+    statusRef.get().then((doc) => {
+      const agora = new Date();
+      if (doc.exists) {
+        const ultima = doc.data().ultima_execucao.toDate();
+        const dias = Math.floor((agora - ultima) / (1000 * 60 * 60 * 24));
+
+        if (dias >= 3) {
+          auditarProcedimentos(); // executa auditoria
+          statusRef.set({ ultima_execucao: agora }); // atualiza data
+        }
+      } else {
+        // primeira execução
+        auditarProcedimentos();
+        statusRef.set({ ultima_execucao: agora });
+      }
+    });
+  }
+
+  // Executa ao carregar o dashboard
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      verificarAuditoriaAutomatica();
+    }
+  });
+</script>
