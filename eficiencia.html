@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Eficiência por Perfil — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Eficiência Institucional por Perfil</h2>
+  <p id="user-info">Carregando administrador...</p>
+
+  <table border="1" cellpadding="8" style="margin-top: 20px;">
+    <thead>
+      <tr>
+        <th>Perfil</th>
+        <th>Procedimentos</th>
+        <th>Contestações</th>
+        <th>Tempo Médio (min)</th>
+        <th>Fluidez</th>
+      </tr>
+    </thead>
+    <tbody id="tabela-eficiencia"></tbody>
+  </table>
+
+  <button onclick="window.location.href='dashboard.html'">Voltar ao Dashboard</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        const email = user.email;
+        db.collection("usuarios").doc(email).get().then((doc) => {
+          if (doc.exists && doc.data().perfil === "Administrador") {
+            document.getElementById("user-info").innerText =
+              `Administrador logado: ${email}`;
+            calcularEficiência();
+          } else {
+            alert("Acesso restrito ao perfil Administrador.");
+            window.location.href = "painel.html";
+          }
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    async function calcularEficiência() {
+      const perfis = ["Titular", "Secretaria", "Administrador"];
+      const tabela = document.getElementById("tabela-eficiencia");
+
+      for (const perfil of perfis) {
+        let procedimentos = 0;
+        let contestoes = 0;
+        let tempoTotal = 0;
+        let usuarios = [];
+
+        const usuariosSnap = await db.collection("usuarios").where("perfil", "==", perfil).get();
+        usuarios = usuariosSnap.docs.map(doc => doc.id);
+
+        const procSnap = await db.collection("procedimentos")
+          .where("usuario_id", "in", usuarios).get();
+
+        procedimentos = procSnap.size;
+        procSnap.forEach(doc => {
+          const dados = doc.data();
+          if (dados.tempo_execucao) tempoTotal += dados.tempo_execucao;
+        });
+
+        const contSnap = await db.collection("contestacoes_tecnicas")
+          .where("usuario", "in", usuarios).get();
+
+        contestoes = contSnap.size;
+
+        const tempoMedio = procedimentos > 0 ? (tempoTotal / procedimentos).toFixed(2) : "—";
+        const fluidez = tempoMedio !== "—" ? `${tempoMedio} min` : "—";
+
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${perfil}</td>
+          <td>${procedimentos}</td>
+          <td>${contestoes}</td>
+          <td>${tempoMedio}</td>
+          <td>${fluidez}</td>
+        `;
+        tabela.appendChild(linha);
+      }
+    }
+  </script>
+</body>
+</html>
