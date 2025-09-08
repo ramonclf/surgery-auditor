@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interface Institucional — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <h2>Interface Institucional Unificada</h2>
+  <p id="user-info">Carregando administrador...</p>
+
+  <section>
+    <h3>🔧 Operação Técnica</h3>
+    <button onclick="window.location.href='registro.html'">🧾 Registrar Procedimento</button>
+    <button onclick="window.location.href='contestacao.html'">📄 Contestação Técnica</button>
+    <button onclick="window.location.href='validacao.html'">🧪 Validação por Campo</button>
+  </section>
+
+  <section>
+    <h3>🛡️ Governança Institucional</h3>
+    <button onclick="window.location.href='escopo.html'">🧊 Escopo Congelado</button>
+    <button onclick="window.location.href='regras.html'">⚙️ Motor de Regras Técnicas</button>
+    <button onclick="window.location.href='usuarios.html'">👥 Gerenciar Perfis</button>
+  </section>
+
+  <section>
+    <h3>📊 Inteligência Estratégica</h3>
+    <button onclick="window.location.href='indicadores.html'">📈 Indicadores Institucionais</button>
+    <button onclick="window.location.href='eficiencia.html'">📊 Eficiência por Perfil</button>
+    <button onclick="window.location.href='auditoria.html'">🔍 Auditoria Retrospectiva</button>
+  </section>
+
+  <section>
+    <h3>📣 Rastreabilidade e Comunicação</h3>
+    <button onclick="window.location.href='logs.html'">🧾 Logs Técnicos</button>
+    <button onclick="window.location.href='comunicacao.html'">📣 Comunicação Institucional</button>
+  </section>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        const email = user.email;
+        const db = firebase.firestore();
+
+        db.collection("usuarios").doc(email).get().then((doc) => {
+          if (doc.exists && doc.data().perfil === "Administrador") {
+            document.getElementById("user-info").innerText =
+              `Administrador logado: ${email}`;
+          } else {
+            alert("Acesso restrito ao perfil Administrador.");
+            window.location.href = "painel.html";
+          }
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>
