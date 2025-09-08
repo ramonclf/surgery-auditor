@@ -156,5 +156,37 @@
         });
     }
   </script>
+  <section style="margin-top: 40px;">
+  <h3>📋 Procedimentos no Período</h3>
+  <table border="1" cellpadding="6">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Usuário</th>
+        <th>Urgência</th>
+        <th>Valor</th>
+        <th>Tempo Execução</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody id="tabela-exportacao"></tbody>
+  </table>
+</section>
 </body>
 </html>
+const tabela = document.getElementById("tabela-exportacao");
+tabela.innerHTML = "";
+
+procSnap.forEach(doc => {
+  const dados = doc.data();
+  const linha = document.createElement("tr");
+  linha.innerHTML = `
+    <td>${dados.procedimento_id || "—"}</td>
+    <td>${dados.usuario_id}</td>
+    <td>${dados.urgencia}</td>
+    <td>R$ ${dados.valor.toFixed(2)}</td>
+    <td>${dados.tempo_execucao || "—"} min</td>
+    <td>${new Date(dados.timestamp.toDate()).toLocaleDateString()}</td>
+  `;
+  tabela.appendChild(linha);
+});
