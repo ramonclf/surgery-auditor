@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Visual — Surgery Auditor</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>Dashboard Institucional Visual</h2>
+  <p id="user-info">Carregando administrador...</p>
+
+  <!-- Cards -->
+  <section id="cards" style="display: flex; gap: 20px; margin-top: 20px;">
+    <div class="card"><h3>🧾 Procedimentos</h3><p id="card-procedimentos">...</p></div>
+    <div class="card"><h3>📄 Contestações</h3><p id="card-contestacoes">...</p></div>
+    <div class="card"><h3>⏱️ Tempo Médio</h3><p id="card-tempo">...</p></div>
+    <div class="card"><h3>🛑 Alertas Críticos</h3><p id="card-alertas">...</p></div>
+  </section>
+
+  <!-- Gráficos -->
+  <section style="margin-top: 40px;">
+    <h3>📊 Distribuição por Perfil</h3>
+    <canvas id="grafico-perfil" width="600" height="300"></canvas>
+  </section>
+
+  <!-- Alertas em tempo real -->
+  <section style="margin-top: 40px;">
+    <h3>🔔 Últimos Alertas Técnicos</h3>
+    <ul id="lista-alertas"></ul>
+  </section>
+
+  <button onclick="window.location.href='painel.html'">Voltar ao Painel</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        const email = user.email;
+        db.collection("usuarios").doc(email).get().then((doc) => {
+          if (doc.exists && doc.data().perfil === "Administrador") {
+            document.getElementById("user-info").innerText =
+              `Administrador logado: ${email}`;
+            carregarCards();
+            carregarGraficoPerfil();
+            carregarAlertas();
+          } else {
+            alert("Acesso restrito ao perfil Administrador.");
+            window.location.href = "painel.html";
+          }
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    async function carregarCards() {
+      const procSnap = await db.collection("procedimentos").get();
+      const contSnap = await db.collection("contestacoes_tecnicas").get();
+      const alertSnap = await db.collection("alertas_tecnicos").get();
+
+      let tempoTotal = 0;
+      procSnap.forEach(doc => {
+        const dados = doc.data();
+        if (dados.tempo_execucao) tempoTotal += dados.tempo_execucao;
+      });
+
+      const tempoMedio = procSnap.size > 0 ? (tempoTotal / procSnap.size).toFixed(2) : "—";
+
+      document.getElementById("card-procedimentos").innerText = procSnap.size;
+      document.getElementById("card-contestacoes").innerText = contSnap.size;
+      document.getElementById("card-tempo").innerText = `${tempoMedio} min`;
+      document.getElementById("card-alertas").innerText = alertSnap.size;
+    }
+
+    async function carregarGraficoPerfil() {
+      const perfis = ["Titular", "Secretaria", "Administrador"];
+      const dadosGrafico = [];
+
+      for (const perfil of perfis) {
+        const usuariosSnap = await db.collection("usuarios").where("perfil", "==", perfil).get();
+        const emails = usuariosSnap.docs.map(doc => doc.id);
+
+        const procSnap = await db.collection("procedimentos")
+          .where("usuario_id", "in", emails).get();
+
+        dadosGrafico.push(procSnap.size);
+      }
+
+      new Chart(document.getElementById("grafico-perfil"), {
+        type: "bar",
+        data: {
+          labels: perfis,
+          datasets: [{
+            label: "Procedimentos por Perfil",
+            data: dadosGrafico,
+            backgroundColor: ["#4e79a7", "#f28e2b", "#e15759"]
+          }]
+        }
+      });
+    }
+
+    function carregarAlertas() {
+      const lista = document.getElementById("lista-alertas");
+      lista.innerHTML = "";
+
+      db.collection("alertas_tecnicos").orderBy("timestamp", "desc").limit(5).get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            const dados = doc.data();
+            const item = document.createElement("li");
+            item.innerHTML = `
+              <strong>${dados.procedimento_id}</strong> — ${dados.campo}<br />
+              ${dados.descricao}<br />
+              <em>${new Date(dados.timestamp).toLocaleString()}</em>
+            `;
+            lista.appendChild(item);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
