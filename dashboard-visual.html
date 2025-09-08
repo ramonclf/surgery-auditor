@@ -52,6 +52,53 @@
     const db = firebase.firestore();
 
     firebase.auth().onAuthStateChanged((user) => {
+async function carregarGraficoPerfil() {
+  const db = firebase.firestore();
+  const perfis = ["Titular", "Secretaria", "Administrador"];
+  const dadosGrafico = [];
+
+  for (const perfil of perfis) {
+    // Buscar usuários com esse perfil
+    const usuariosSnap = await db.collection("usuarios").where("perfil", "==", perfil).get();
+    const emails = usuariosSnap.docs.map(doc => doc.id);
+
+    if (emails.length === 0) {
+      dadosGrafico.push(0);
+      continue;
+    }
+
+    // Buscar procedimentos desses usuários
+    const procSnap = await db.collection("procedimentos")
+      .where("usuario_id", "in", emails).get();
+
+    dadosGrafico.push(procSnap.size);
+  }
+
+  // Criar gráfico com dados reais
+  new Chart(document.getElementById("grafico-perfil"), {
+    type: "bar",
+    data: {
+      labels: perfis,
+      datasets: [{
+        label: "Procedimentos por Perfil",
+        data: dadosGrafico,
+        backgroundColor: ["#4e79a7", "#f28e2b", "#e15759"]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
       if (user) {
         const email = user.email;
         db.collection("usuarios").doc(email).get().then((doc) => {
@@ -180,6 +227,7 @@
   responsive: true,
   maintainAspectRatio: false
 }
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
 const tabela = document.getElementById("tabela-exportacao");
