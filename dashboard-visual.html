@@ -14,8 +14,17 @@
   <title>Dashboard Visual — Surgery Auditor</title>
   <link rel="stylesheet" href="styles/main.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#4e79a7" />
 </head>
 <body>
+  <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js")
+      .then(() => console.log("Service Worker registrado"))
+      .catch((error) => console.error("Erro ao registrar SW:", error));
+  }
+</script>
   <h2>Dashboard Institucional Visual</h2>
   <p id="user-info">Carregando administrador...</p>
 
